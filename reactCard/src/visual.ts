@@ -23,58 +23,105 @@
 *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 *  THE SOFTWARE.
 */
-"use strict";
+// "use strict";
 
-import "./../style/visual.less";
+// import "./../style/visual.less";
+// import powerbi from "powerbi-visuals-api";
+// import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
+// import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
+// import IVisual = powerbi.extensibility.visual.IVisual;
+// import EnumerateVisualObjectInstancesOptions = powerbi.EnumerateVisualObjectInstancesOptions;
+// import VisualObjectInstance = powerbi.VisualObjectInstance;
+// import DataView = powerbi.DataView;
+// import VisualObjectInstanceEnumerationObject = powerbi.VisualObjectInstanceEnumerationObject;
+
+// import { VisualSettings } from "./settings";
+// export class Visual implements IVisual {
+//     private target: HTMLElement;
+//     private updateCount: number;
+//     private settings: VisualSettings;
+//     private textNode: Text;
+
+//     constructor(options: VisualConstructorOptions) {
+//         console.log('Visual constructor', options);
+//         this.target = options.element;
+//         this.updateCount = 0;
+//         if (document) {
+//             const new_p: HTMLElement = document.createElement("p");
+//             new_p.appendChild(document.createTextNode("Update count:"));
+//             const new_em: HTMLElement = document.createElement("em");
+//             this.textNode = document.createTextNode(this.updateCount.toString());
+//             new_em.appendChild(this.textNode);
+//             new_p.appendChild(new_em);
+//             this.target.appendChild(new_p);
+//         }
+//     }
+
+//     public update(options: VisualUpdateOptions) {
+//         this.settings = Visual.parseSettings(options && options.dataViews && options.dataViews[0]);
+//         console.log('Visual update', options);
+//         if (this.textNode) {
+//             this.textNode.textContent = (this.updateCount++).toString();
+//         }
+//     }
+
+//     private static parseSettings(dataView: DataView): VisualSettings {
+//         return <VisualSettings>VisualSettings.parse(dataView);
+//     }
+
+//     /**
+//      * This function gets called for each of the objects defined in the capabilities files and allows you to select which of the
+//      * objects and properties you want to expose to the users in the property pane.
+//      *
+//      */
+//     public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] | VisualObjectInstanceEnumerationObject {
+//         return VisualSettings.enumerateObjectInstances(this.settings || VisualSettings.getDefault(), options);
+//     }
+// }
+
+"use strict";
 import powerbi from "powerbi-visuals-api";
+
+import DataView = powerbi.DataView;
 import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
 import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 import IVisual = powerbi.extensibility.visual.IVisual;
-import EnumerateVisualObjectInstancesOptions = powerbi.EnumerateVisualObjectInstancesOptions;
-import VisualObjectInstance = powerbi.VisualObjectInstance;
-import DataView = powerbi.DataView;
-import VisualObjectInstanceEnumerationObject = powerbi.VisualObjectInstanceEnumerationObject;
 
-import { VisualSettings } from "./settings";
+// Import React dependencies and the added component
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+// import ReactCircleCard from "./component";
+import { ReactCircleCard, initialState } from "./component";
+
+import "./../style/visual.less";
+
 export class Visual implements IVisual {
     private target: HTMLElement;
-    private updateCount: number;
-    private settings: VisualSettings;
-    private textNode: Text;
+    private reactRoot: React.ComponentElement<any, any>;
 
     constructor(options: VisualConstructorOptions) {
-        console.log('Visual constructor', options);
+        this.reactRoot = React.createElement(ReactCircleCard, {});
         this.target = options.element;
-        this.updateCount = 0;
-        if (document) {
-            const new_p: HTMLElement = document.createElement("p");
-            new_p.appendChild(document.createTextNode("Update count:"));
-            const new_em: HTMLElement = document.createElement("em");
-            this.textNode = document.createTextNode(this.updateCount.toString());
-            new_em.appendChild(this.textNode);
-            new_p.appendChild(new_em);
-            this.target.appendChild(new_p);
-        }
+
+        ReactDOM.render(this.reactRoot, this.target);
+
     }
 
     public update(options: VisualUpdateOptions) {
-        this.settings = Visual.parseSettings(options && options.dataViews && options.dataViews[0]);
-        console.log('Visual update', options);
-        if (this.textNode) {
-            this.textNode.textContent = (this.updateCount++).toString();
+        if(options.dataViews && options.dataViews[0]){
+            const dataView: DataView = options.dataViews[0];
+        
+            ReactCircleCard.update({
+                textLabel: dataView.metadata.columns[0].displayName,
+                    textValue: dataView.single.value.toString()
+            });
+        } else {
+            this.clear();
         }
-    }
 
-    private static parseSettings(dataView: DataView): VisualSettings {
-        return <VisualSettings>VisualSettings.parse(dataView);
     }
-
-    /**
-     * This function gets called for each of the objects defined in the capabilities files and allows you to select which of the
-     * objects and properties you want to expose to the users in the property pane.
-     *
-     */
-    public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] | VisualObjectInstanceEnumerationObject {
-        return VisualSettings.enumerateObjectInstances(this.settings || VisualSettings.getDefault(), options);
+    
+    private clear() {
+        ReactCircleCard.update(initialState);
     }
 }
